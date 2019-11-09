@@ -25,6 +25,12 @@
  */
 package de.mindscan.fluentgenesis.embedder.main;
 
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
@@ -33,7 +39,10 @@ import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreproc
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 
+import com.google.gson.Gson;
+
 import de.mindscan.fluentgenesis.embedder.sentenceiterator.MultipleCorpusFilesLineSentenceIterator;
+import de.mindscan.fluentgenesis.embedder.types.ModelHParams;
 
 /**
  * Class contains the training operation for the word2vec embeddings.
@@ -46,17 +55,19 @@ public class TrainingOperation {
 
     public static void main( String[] args ) {
 
+        // TODO: should be provided by args
+        String modelName = "1k-datapoint";
+        // TODO: should be provided by args
+        ModelHParams hParams = loadHParams( "D:\\Projects\\SinglePageApplication\\Angular\\FluentGenesis-Classifier\\src\\de\\mindscan", modelName );
+
         // TODO: load these information from the hparams files / must be added to the model, since
         int windowSize = 10;
         int epochs = 1;
         int dimensions = 1280;
         int minWordFrequency = 1;
-        String modelName = "excerpt-10k";
-        String embeddingDataPath = "D:\\Downloads\\Big-Code-excerpt";
-
         TrainingOperation trainer = new TrainingOperation();
 
-        Word2Vec embeddedTokens = trainer.fitEmbeddings( embeddingDataPath, windowSize, epochs, dimensions, minWordFrequency );
+        Word2Vec embeddedTokens = trainer.fitEmbeddings( hParams.getPath(), windowSize, epochs, dimensions, minWordFrequency );
 
         trainer.saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
     }
@@ -101,6 +112,21 @@ public class TrainingOperation {
 
     private void saveModel( Word2Vec embeddedTokens, String targetFilename ) {
         WordVectorSerializer.writeWord2VecModel( embeddedTokens, targetFilename );
+    }
+
+    private static ModelHParams loadHParams( String basePath, String modelName ) {
+        Path path = Paths.get( basePath, "Model", modelName );
+
+        try (BufferedReader jsonBufferedReader = Files.newBufferedReader( path, StandardCharsets.UTF_8 )) {
+            Gson gson = new Gson();
+            ModelHParams result = gson.fromJson( jsonBufferedReader, ModelHParams.class );
+            return result;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
 }
