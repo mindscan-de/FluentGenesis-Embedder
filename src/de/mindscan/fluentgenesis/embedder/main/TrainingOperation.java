@@ -25,7 +25,15 @@
  */
 package de.mindscan.fluentgenesis.embedder.main;
 
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.word2vec.Word2Vec;
+import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
+import org.deeplearning4j.text.sentenceiterator.SentencePreProcessor;
+import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreprocessor;
+import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
+import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
+
+import de.mindscan.fluentgenesis.embedder.sentenceiterator.MultipleCorpusFilesLineSentenceIterator;
 
 /**
  * 
@@ -44,18 +52,47 @@ public class TrainingOperation {
 
         TrainingOperation embedderTraining = new TrainingOperation();
 
-        Word2Vec embedderModel = embedderTraining.embed( embeddingDataPath, windowSize, epochs, dimensions, minWordFrequency );
+        Word2Vec embeddedTokens = embedderTraining.fitEmbeddings( embeddingDataPath, windowSize, epochs, dimensions, minWordFrequency );
 
-        embedderTraining.saveModel( embedderModel, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
+        embedderTraining.saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
     }
 
-    private Word2Vec embed( String embeddingDataPath, int windowSize, int epochs, int dimensions, int minWordFrequency ) {
-        // TODO Auto-generated method stub
-        return null;
+    private Word2Vec fitEmbeddings( String embeddingDataPath, int windowSize, int epochs, int dimensions, int minWordFrequency ) {
+        System.out.println( "Load and vectorize bpe encodings" );
+
+        TokenizerFactory tFactory = new DefaultTokenizerFactory();
+        tFactory.setTokenPreProcessor( new CommonPreprocessor() );
+
+        @SuppressWarnings( "serial" )
+        SentencePreProcessor sPreProcessor = new SentencePreProcessor() {
+            @Override
+            public String preProcess( String sentence ) {
+                // since we only have numbers as words, we do not have to care about this. 
+                return sentence.toLowerCase();
+            }
+        };
+
+        SentenceIterator sentenceIterator = new MultipleCorpusFilesLineSentenceIterator( embeddingDataPath );
+        sentenceIterator.setPreProcessor( sPreProcessor );
+
+        Word2Vec embeddings = new Word2Vec.Builder() //
+                        .useUnknown( true ) // Use placeholder for the unknown word - bpe encodings should be fine and be able to encode unknown tokens
+                        .iterations( epochs ) // Number of time to fit this model
+                        .layerSize( dimensions ) // Number of dimensions
+                        .windowSize( windowSize ) // number of tokens left and right to the element
+                        .minWordFrequency( minWordFrequency ) // number of minmal word occurence
+                        .seed( 1337 ) //
+                        .tokenizerFactory( tFactory ) //
+                        .iterate( sentenceIterator ) //
+                        .build();
+
+        embeddings.fit();
+
+        return embeddings;
     }
 
-    private void saveModel( Word2Vec embedderModel, String string ) {
-        // TODO Auto-generated method stub
+    private void saveModel( Word2Vec embeddedTokens, String targetFilename ) {
+        WordVectorSerializer.writeWord2VecModel( embeddedTokens, targetFilename );
     }
 
 }
