@@ -25,19 +25,21 @@
  */
 package de.mindscan.fluentgenesis.embedder.sentenceiterator;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.deeplearning4j.text.sentenceiterator.BaseSentenceIterator;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
+
+import de.mindscan.fluentgenesis.embedder.types.ModelBPEContent;
 
 /**
  * We need a SentenceIterator for training the Word2Vec Model.
@@ -88,21 +90,14 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
     public String nextSentence() {
         // read content from the current corpus json file and convert the array of bpe encoded data into whitespace separated "words"
         String line = "";
-        Gson gson = new Gson();
-        JsonReader reader;
-        try {
-            reader = new JsonReader( new FileReader( this.currentFile ) );
-            Type type = new TypeToken<Map<String, String>>() {
-            }.getType();
-            Map<String, String> map = gson.fromJson( reader, type );
-
-            Object arrayOfTokens = map.get( "tokens" );
-
-            System.out.println( arrayOfTokens == null ? "line of tokens is (null)" : arrayOfTokens.toString() );
+        try (BufferedReader jsonBufferedReader = Files.newBufferedReader( Paths.get( this.currentFile.getAbsolutePath() ), StandardCharsets.UTF_8 )) {
+            Gson gson = new Gson();
+            ModelBPEContent content = gson.fromJson( jsonBufferedReader, ModelBPEContent.class );
+            line = String.join( " ", content.getTokenData().stream().map( x -> x.toString() ).collect( Collectors.toList() ) );
 
             currentTokenLine++;
         }
-        catch (FileNotFoundException e) {
+        catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
