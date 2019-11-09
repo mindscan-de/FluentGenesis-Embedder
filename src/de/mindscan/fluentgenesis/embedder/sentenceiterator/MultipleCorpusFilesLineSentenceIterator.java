@@ -27,10 +27,17 @@ package de.mindscan.fluentgenesis.embedder.sentenceiterator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.deeplearning4j.text.sentenceiterator.BaseSentenceIterator;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 
 /**
  * We need a SentenceIterator for training the Word2Vec Model.
@@ -44,6 +51,7 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
     private Iterator<File> corpusFileIterator;
 
     private File currentFile;
+    private int currentTokenLine = 0;
 
     /**
      * 
@@ -80,6 +88,24 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
     public String nextSentence() {
         // read content from the current corpus json file and convert the array of bpe encoded data into whitespace separated "words"
         String line = "";
+        Gson gson = new Gson();
+        JsonReader reader;
+        try {
+            reader = new JsonReader( new FileReader( this.currentFile ) );
+            Type type = new TypeToken<Map<String, String>>() {
+            }.getType();
+            Map<String, String> map = gson.fromJson( reader, type );
+
+            Object arrayOfTokens = map.get( "tokens" );
+
+            System.out.println( arrayOfTokens == null ? "line of tokens is (null)" : arrayOfTokens.toString() );
+
+            currentTokenLine++;
+        }
+        catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         if (preProcessor != null) {
             return preProcessor.preProcess( line );
@@ -93,9 +119,48 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
      */
     @Override
     public boolean hasNext() {
-        // TODO Auto-generated method stub
-        // check if there is more in corpus file or in next corpus file.
+        if (currentFileHasNext()) {
+            return true;
+        }
+
+        // find next useful file, and then have a look into the file...
+        while (cleanupAndThenPrepareNextFile()) {
+            if (currentFileHasNext()) {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    /**
+     * @return
+     */
+    private boolean currentFileHasNext() {
+        return currentTokenLine == 0;
+    }
+
+    /**
+     * @return
+     */
+    private boolean cleanupAndThenPrepareNextFile() {
+        try {
+
+            if (!corpusFileIterator.hasNext()) {
+                // if there is no next file in corpus, there is not next file to prepare
+                return false;
+            }
+
+            initNextFile();
+
+            return false;
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException( "Error while cleanup and prepare next file to read " );
+        }
+
     }
 
     /** 
@@ -103,8 +168,14 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
      */
     @Override
     public void reset() {
-        // TODO Auto-generated method stub
+        try {
+            corpusFileIterator = createFileIterator( basePath, fileExtension );
 
+            initNextFile();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initFirstFile() {
@@ -123,7 +194,7 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
 
     private void initNextFile() throws FileNotFoundException, IOException {
         currentFile = corpusFileIterator.next();
-        // fileStream = new BufferedInputStream( new FileInputStream( currentFile ) );
+        currentTokenLine = 0;
 
         System.out.println( "Processing file: " + currentFile.getAbsolutePath() );
     }
