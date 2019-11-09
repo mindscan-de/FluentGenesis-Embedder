@@ -115,7 +115,7 @@ public class TrainingOperation {
     }
 
     private static ModelHParams loadHParams( String basePath, String modelName ) {
-        Path path = Paths.get( basePath, "Model", modelName );
+        Path path = Paths.get( basePath, "Model", modelName, "hparams.json" );
 
         try (BufferedReader jsonBufferedReader = Files.newBufferedReader( path, StandardCharsets.UTF_8 )) {
             Gson gson = new Gson();
