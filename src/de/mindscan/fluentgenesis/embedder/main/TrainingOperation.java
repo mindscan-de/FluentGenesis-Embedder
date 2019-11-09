@@ -54,11 +54,11 @@ public class TrainingOperation {
         String modelName = "excerpt-10k";
         String embeddingDataPath = "D:\\Downloads\\Big-Code-excerpt";
 
-        TrainingOperation embedderTraining = new TrainingOperation();
+        TrainingOperation trainer = new TrainingOperation();
 
-        Word2Vec embeddedTokens = embedderTraining.fitEmbeddings( embeddingDataPath, windowSize, epochs, dimensions, minWordFrequency );
+        Word2Vec embeddedTokens = trainer.fitEmbeddings( embeddingDataPath, windowSize, epochs, dimensions, minWordFrequency );
 
-        embedderTraining.saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
+        trainer.saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
     }
 
     private Word2Vec fitEmbeddings( String embeddingDataPath, int windowSize, int epochs, int dimensions, int minWordFrequency ) {
