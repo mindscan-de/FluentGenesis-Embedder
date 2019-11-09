@@ -36,13 +36,17 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import de.mindscan.fluentgenesis.embedder.sentenceiterator.MultipleCorpusFilesLineSentenceIterator;
 
 /**
+ * Class contains the training operation for the word2vec embeddings.
  * 
+ * Goal is to read all bpe encoded files from the preprocessed ".java.json" and train an embedding 
+ * vector for each bpe-token. These embeddings are the most important milestone for the training
+ * of the GPT-2 - like architecture. 
  */
 public class TrainingOperation {
 
     public static void main( String[] args ) {
 
-        // TODO: load these information from the hparams files
+        // TODO: load these information from the hparams files / must be added to the model, since
         int windowSize = 10;
         int epochs = 1;
         int dimensions = 1280;
@@ -67,7 +71,11 @@ public class TrainingOperation {
         SentencePreProcessor sPreProcessor = new SentencePreProcessor() {
             @Override
             public String preProcess( String sentence ) {
-                // since we only have numbers as words, we do not have to care about this. 
+                // since we only have numbers as words, we do not have to care about this.
+                // maybe i will also add a dictionary of command words like 
+                // <|start|> <|predict|> <|classify|> <|eos|> <|mask|> ....
+                // BERT or GPT2-like training will require something like this, so thats why the preprocessor is still added yet.
+                // TODO: need to evaluate how much of performance that costs...
                 return sentence.toLowerCase();
             }
         };
@@ -76,12 +84,12 @@ public class TrainingOperation {
         sentenceIterator.setPreProcessor( sPreProcessor );
 
         Word2Vec embeddings = new Word2Vec.Builder() //
-                        .useUnknown( true ) // Use placeholder for the unknown word - bpe encodings should be fine and be able to encode unknown tokens
+                        .useUnknown( true ) // Use placeholder for the unknown word - bpe encodings should be fine and be able to encode unknown tokens (atm)
                         .iterations( epochs ) // Number of time to fit this model
                         .layerSize( dimensions ) // Number of dimensions
                         .windowSize( windowSize ) // number of tokens left and right to the element
                         .minWordFrequency( minWordFrequency ) // number of minmal word occurence
-                        .seed( 1337 ) //
+                        .seed( 1337 ) // stable vectors / stable initialization
                         .tokenizerFactory( tFactory ) //
                         .iterate( sentenceIterator ) //
                         .build();
