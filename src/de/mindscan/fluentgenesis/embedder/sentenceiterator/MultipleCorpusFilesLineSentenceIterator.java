@@ -93,7 +93,7 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
         try (BufferedReader jsonBufferedReader = Files.newBufferedReader( Paths.get( this.currentFile.getAbsolutePath() ), StandardCharsets.UTF_8 )) {
             Gson gson = new Gson();
             ModelBPEContent content = gson.fromJson( jsonBufferedReader, ModelBPEContent.class );
-            line = String.join( " ", content.getTokenData().stream().map( x -> x.toString() ).collect( Collectors.toList() ) );
+            line = String.join( " ", content.getTokenData().stream().map( x -> encodeToWord( x ) ).collect( Collectors.toList() ) );
 
             currentTokenLine++;
         }
@@ -107,6 +107,17 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
         }
 
         return line;
+    }
+
+    // fucking workaround for word2vec, because word2vec won't accept numbers as words, so each number is vconverted into a string
+    // and then '0' is replaced by lowercase 'a', '1' by 'b' and so on ...
+    private String encodeToWord( Integer i ) {
+        byte[] bytes = i.toString().getBytes();
+        for (int j = 0; j < bytes.length; j++) {
+            bytes[j] += 49;
+        }
+
+        return new String( bytes );
     }
 
     /** 
