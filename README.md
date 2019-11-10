@@ -51,6 +51,19 @@ That said, please remember, this is a private educational project.
 
 ## Next steps
 
+## Reminder
+
+If you have more than one device, you must set an environment variable and expose one device only.
+Deeplearning4j is not able to share the load across multiple devices. (But you can, if you have 
+different runners)
+
+This will expose the second device because '0' is used for my day to day stuff, like graphics etc.
+I don't want to interfere the calculations.
+
+```
+set CUDA_VISIBLE_DEVICES=1
+```
+
 ## License
 
 Usage is provided under the [MIT License](http://opensource.org/licenses/mit-license.php). See LICENSE for the full details.
