@@ -65,10 +65,10 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
     public MultipleCorpusFilesLineSentenceIterator( String basePath, String allowedExtension ) {
         this.basePath = basePath;
         this.fileExtension = allowedExtension;
+        this.currentTokenLine = 0;
 
         this.corpusFileIterator = createFileIterator( this.basePath, this.fileExtension );
 
-        initFirstFile();
     }
 
     public static BaseSentenceIterator createCorpusIterator( String basePath, String allowedExtension ) {
