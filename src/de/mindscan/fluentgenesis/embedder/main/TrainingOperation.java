@@ -56,15 +56,17 @@ public class TrainingOperation {
     public static void main( String[] args ) {
 
         // TODO: should be provided by args
-        String modelName = "1K-datapoint";
+        // String modelName = "1K-datapoint";
+        String modelName = "16K-excerpt";
+
         // TODO: should be provided by args
         ModelHParams hParams = loadHParams( "D:\\Projects\\SinglePageApplication\\Angular\\FluentGenesis-Classifier\\src\\de\\mindscan\\fluentgenesis\\bpe",
                         modelName );
 
         // TODO: load these information from the hparams files / must be added to the model, since
-        int windowSize = 10;
-        int epochs = 1;
-        int dimensions = 1280;
+        int windowSize = 24;
+        int epochs = 3;
+        int dimensions = 512;
         int minWordFrequency = 1;
         TrainingOperation trainer = new TrainingOperation();
 
