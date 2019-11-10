@@ -39,12 +39,12 @@ That said, please remember, this is a private educational project.
 ## The MVP
 
 * load model description (hparams.json) __[done]__
-* walk all files of the corpus and read them as json and use the encoded bpe indexes
+* walk all files of the corpus and read them as json and use the encoded bpe indexes 
   * read one ".java.json"-file and extract information and prepare that for the sentence iterator __[done]__
-  * read all ".java.json" files 
-  * set/add additional vocabulary 
-* train cbow / skip-gram for these bpe encodings (fitting)
-* export the calculated embeddings (saving)
+  * read all ".java.json" files  __[done]__
+  * set/add additional vocabulary __TODO__
+* train cbow / skip-gram for these bpe encodings (fitting) __[done]__
+* export the calculated embeddings (saving) __[done]__
 
 
 ## Nice to have
