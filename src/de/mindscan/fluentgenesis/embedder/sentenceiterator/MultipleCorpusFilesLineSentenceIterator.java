@@ -148,7 +148,7 @@ public class MultipleCorpusFilesLineSentenceIterator extends BaseSentenceIterato
 
             initNextFile();
 
-            return false;
+            return true;
         }
         catch (IOException e) {
             // TODO Auto-generated catch block
