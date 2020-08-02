@@ -1,12 +1,12 @@
 package de.mindscan.fluentgenesis.embedder.sentenceiterator;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 import org.deeplearning4j.text.sentenceiterator.BaseSentenceIterator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MultipleCorpusFilesLineSentenceIteratorTest {
 
