@@ -43,6 +43,7 @@ import com.google.gson.Gson;
 
 import de.mindscan.fluentgenesis.embedder.sentenceiterator.MultipleCorpusFilesLineSentenceIterator;
 import de.mindscan.fluentgenesis.embedder.types.ModelHParams;
+import picocli.CommandLine;
 
 /**
  * Class contains the training operation for the word2vec embeddings.
@@ -53,26 +54,36 @@ import de.mindscan.fluentgenesis.embedder.types.ModelHParams;
  */
 public class TrainingOperation {
 
+    private String modelName;
+    private Path hparamsLocation;
+
+    /**
+     * CTor
+     * 
+     * @param parameters contains the parsed command line parameters
+     */
+    public TrainingOperation( TrainingOperationParameters parameters ) {
+        this.modelName = parameters.getModelName();
+        this.hparamsLocation = parameters.getHparamsPath();
+    }
+
     public static void main( String[] args ) {
+        int exitCode = new CommandLine( new TrainingOperationParameters() ).execute( args );
+        System.exit( exitCode );
+    }
 
-        // TODO: should be provided by args
-        // String modelName = "1K-datapoint";
-        String modelName = "16K-excerpt";
-
-        // TODO: should be provided by args
-        ModelHParams hParams = loadHParams( "D:\\Projects\\SinglePageApplication\\Angular\\FluentGenesis-Classifier\\src\\de\\mindscan\\fluentgenesis\\bpe",
-                        modelName );
+    public void run() {
+        ModelHParams hParams = loadHParams( modelName );
 
         // TODO: load these information from the hparams files / must be added to the model, since
-        int windowSize = 24;
-        int epochs = 3;
+        int windowSize = 20;
+        int epochs = 2;
         int dimensions = 512;
         int minWordFrequency = 1;
-        TrainingOperation trainer = new TrainingOperation();
 
-        Word2Vec embeddedTokens = trainer.fitEmbeddings( hParams.getPath(), windowSize, epochs, dimensions, minWordFrequency );
+        Word2Vec embeddedTokens = fitEmbeddings( hParams.getPath(), windowSize, epochs, dimensions, minWordFrequency );
 
-        trainer.saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_" + dimensions + "d.zip" );
+        saveModel( embeddedTokens, "embeddings_" + modelName + "_w" + windowSize + "_e" + epochs + "_" + dimensions + "d.zip" );
     }
 
     private Word2Vec fitEmbeddings( String embeddingDataPath, int windowSize, int epochs, int dimensions, int minWordFrequency ) {
@@ -117,8 +128,8 @@ public class TrainingOperation {
         WordVectorSerializer.writeWord2VecModel( embeddedTokens, targetFilename );
     }
 
-    private static ModelHParams loadHParams( String basePath, String modelName ) {
-        Path path = Paths.get( basePath, "Model", modelName, "hparams.json" );
+    private ModelHParams loadHParams( String modelName ) {
+        Path path = hparamsLocation.resolve( Paths.get( "Model", modelName, "hparams.json" ) );
 
         try (BufferedReader jsonBufferedReader = Files.newBufferedReader( path, StandardCharsets.UTF_8 )) {
             Gson gson = new Gson();

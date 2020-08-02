@@ -13,6 +13,14 @@
   
   
   <dependencies>
+  
+  	<!-- https://mvnrepository.com/artifact/info.picocli/picocli -->
+	<dependency>
+	    <groupId>info.picocli</groupId>
+	    <artifactId>picocli</artifactId>
+	    <version>4.4.0</version>
+	</dependency>
+  
 	<!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-core -->
 	<dependency>
 	    <groupId>org.deeplearning4j</groupId>
